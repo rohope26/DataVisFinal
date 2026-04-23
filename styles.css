@@ -1,0 +1,111 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: #222;
+  background: #f6f7fb;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.header p {
+  margin: 0.5rem 0 1rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+label {
+  font-weight: 600;
+}
+
+select,
+button {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+button {
+  cursor: pointer;
+  background: #fff;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+#stats {
+  margin: 0;
+  color: #444;
+  font-weight: 600;
+}
+
+#status {
+  margin: 0;
+}
+
+.chart-wrap {
+  position: relative;
+  border: 1px solid #e1e1e1;
+  border-radius: 10px;
+  background: white;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 650px;
+  display: block;
+}
+
+.country {
+  stroke: #fff;
+  stroke-width: 0.5px;
+}
+
+.country:hover {
+  stroke: #111;
+  stroke-width: 1px;
+}
+
+.legend text {
+  font-size: 12px;
+  fill: #333;
+}
+
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  padding: 0.35rem 0.55rem;
+  background: rgba(20, 20, 20, 0.9);
+  color: #fff;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  transform: translate(-50%, -110%);
+  white-space: nowrap;
+  display: none;
+  z-index: 20;
+}
