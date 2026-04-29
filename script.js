@@ -1,5 +1,5 @@
 const WORLD_GEOJSON_URL = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson";
-const LOCAL_DATA_URL = "./met_objects_sample.json?v=2";
+const LOCAL_DATA_URL = "./met_objects_sample.json?v=3";
 const MET_OBJECT_API_URL = "https://collectionapi.metmuseum.org/public/collection/v1/objects/";
 
 const svg = d3.select("#map");
@@ -142,7 +142,8 @@ function updateMapWithFilters() {
 
   const counts = d3.rollup(records, (v) => v.length, (d) => normalizeCountry(d.country));
   const maxCount = d3.max(Array.from(counts.values())) || 1;
-  const color = d3.scaleSequential().domain([0, maxCount]).interpolator(d3.interpolateYlOrRd);
+  const colorMax = Math.max(maxCount, 2);
+  const color = d3.scaleSequentialLog().domain([1, colorMax]).interpolator(d3.interpolateYlOrRd);
 
   svg
     .select(".countries")
@@ -168,7 +169,7 @@ function updateMapWithFilters() {
     })
     .on("mouseleave", () => tooltip.style("display", "none"));
 
-  drawLegend(color, maxCount);
+  drawLegend(color, colorMax);
   statsEl.textContent = `Usable records: ${records.length} | Countries represented: ${counts.size}`;
 
   if (selectedCountry) {
@@ -190,9 +191,13 @@ function drawLegend(colorScale, maxCount) {
   const legend = svg.append("g").attr("class", "legend").attr("transform", `translate(${x}, ${y})`);
 
   const steps = 30;
+  const minCount = 1;
+  const logMin = Math.log(minCount);
+  const logMax = Math.log(maxCount);
+
   for (let i = 0; i < steps; i += 1) {
-    const t0 = i / steps;
-    const value = t0 * maxCount;
+    const t = i / (steps - 1);
+    const value = Math.exp(logMin + t * (logMax - logMin));
     legend
       .append("rect")
       .attr("x", (i * legendWidth) / steps)
@@ -202,11 +207,11 @@ function drawLegend(colorScale, maxCount) {
       .attr("fill", colorScale(value));
   }
 
-  const axisScale = d3.scaleLinear().domain([0, maxCount]).range([0, legendWidth]);
-  const axis = d3.axisBottom(axisScale).ticks(4).tickFormat(d3.format("d"));
+  const axisScale = d3.scaleLog().domain([minCount, maxCount]).range([0, legendWidth]);
+  const axis = d3.axisBottom(axisScale).ticks(4, ",");
 
   legend.append("g").attr("transform", `translate(0, ${legendHeight})`).call(axis);
-  legend.append("text").attr("x", 0).attr("y", -4).text("Artifacts count");
+  legend.append("text").attr("x", 0).attr("y", -4).text("Artifacts count (log)");
 }
 
 function normalizeCountry(value) {
@@ -231,6 +236,16 @@ async function renderArtifactPanels(countryName, count) {
   const renderId = ++artifactPanelRenderId;
   artifactPanelsSectionEl.hidden = false;
   artifactPanelsEl.innerHTML = "";
+
+  // Update the heading to show the selected country name
+  const headingEl = document.getElementById("artifactPanelsHeading");
+  if (headingEl) {
+    if (countryName && count > 0) {
+      headingEl.textContent = `${countryName} Artifacts`;
+    } else {
+      headingEl.textContent = "Selected Country Artifacts";
+    }
+  }
 
   if (!countryName || count === 0) {
     artifactPanelsEmptyEl.textContent = `No artifacts available for ${countryName || "this country"} in the selected period.`;

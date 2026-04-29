@@ -1,4 +1,4 @@
-const LOCAL_DATA_URL = "./met_objects_sample.json?v=2";
+const LOCAL_DATA_URL = "./met_objects_sample.json?v=3";
 const US_COUNTRY_NAME = "United States of America";
 
 const countryFilterEl = document.getElementById("countryCompareFilter");

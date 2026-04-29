@@ -28,5 +28,5 @@ Because this is a static app, you can open `index.html` directly or use any stat
 
 - The app does not call the live API; it reads from your local JSON file.
 - If you want a fresh dataset, regenerate `met_objects_sample.json` with:
-  - `python3 scrape_met_data.py --source csv --sample-size 20000 --output met_objects_sample.json`
+  - `python3 scrape_met_data.py --source csv --sample-size 70000 --output met_objects_sample.json`
 - Country names are normalized where possible, but some records may not match perfectly to world map naming.
