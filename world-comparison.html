@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Met Collection: U.S. vs World</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <h1>How Global Is The Met Collection?</h1>
+        <nav class="page-nav" aria-label="Page navigation">
+          <a class="page-nav-link" href="index.html">Map View</a>
+          <a class="page-nav-link active" href="world-comparison.html">U.S. vs World</a>
+        </nav>
+        <p class="explain-text">
+          The Metropolitan Museum of Art is in New York, but its collection is deeply international.
+          This view compares objects from the United States with objects from your selected country and the
+          rest of the world, showing how much of the collection comes from outside America.
+        </p>
+      </header>
+
+      <section class="controls">
+        <label for="countryCompareFilter">Choose your country</label>
+        <select id="countryCompareFilter"></select>
+      </section>
+
+      <section class="status-row">
+        <p id="compareStatus">Loading local dataset...</p>
+      </section>
+
+      <section class="comparison-card">
+        <svg id="comparisonChart" role="img" aria-label="Bar chart comparing U.S. and world artifact counts"></svg>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="comparison.js?v=1"></script>
+  </body>
+</html>
