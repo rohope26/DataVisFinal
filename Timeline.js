@@ -11,13 +11,14 @@
   "use strict";
 
   // ── Config ──────────────────────────────────────────────────────────────────
-  const CELL_HEIGHT   = 36;
-  const MIN_CELL_W    = 6;
-  const AXIS_HEIGHT   = 36;
-  const PADDING_LEFT  = 52;
-  const PADDING_RIGHT = 20;
-  const PADDING_TOP   = 28;   // leaves room for legend at top
-  const TARGET_BINS   = 60;
+  const CELL_HEIGHT    = 36;
+  const MIN_CELL_W     = 6;
+  const AXIS_HEIGHT    = 36;  // x-axis below heatmap
+  const LEGEND_HEIGHT  = 34;  // gradient bar + numeric axis below x-axis
+  const PADDING_LEFT   = 52;
+  const PADDING_RIGHT  = 20;
+  const PADDING_TOP    = 14;
+  const TARGET_BINS    = 60;
 
   // ── DOM refs ────────────────────────────────────────────────────────────────
   const svgEl     = document.getElementById("timelineSvg");
@@ -93,7 +94,7 @@
     const numBins = bins.length;
     const cellW   = Math.max(MIN_CELL_W, Math.floor(plotW / numBins));
 
-    const svgH = PADDING_TOP + CELL_HEIGHT + AXIS_HEIGHT;
+    const svgH = PADDING_TOP + CELL_HEIGHT + AXIS_HEIGHT + LEGEND_HEIGHT;
     svgEl.style.height = svgH + "px";
     svg.attr("viewBox", `0 0 ${containerW} ${svgH}`);
 
@@ -161,17 +162,32 @@
   }
 
   // ── Legend ───────────────────────────────────────────────────────────────────
+  // Sits below the x-axis. Has a gradient bar with a real log-scale numeric axis.
   function drawLegend(containerW, colorScale, maxCount) {
-    const legendW = 130;
-    const legendH = 8;
-    const steps   = 24;
-    const lx      = containerW - PADDING_RIGHT - legendW;
-    const ly      = 4;
+    const legendW  = 180;
+    const barH     = 10;
+    const steps    = 30;
+
+    // Centre the legend horizontally under the plot area
+    const plotW    = containerW - PADDING_LEFT - PADDING_RIGHT;
+    const lx       = PADDING_LEFT + (plotW - legendW) / 2;
+    // Place it after PADDING_TOP + CELL_HEIGHT + AXIS_HEIGHT
+    const ly       = PADDING_TOP + CELL_HEIGHT + AXIS_HEIGHT + 2;
 
     const lg = svg.append("g")
       .attr("class", "tl-legend")
       .attr("transform", `translate(${lx}, ${ly})`);
 
+    // Label above bar
+    lg.append("text")
+      .attr("x", legendW / 2)
+      .attr("y", -3)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "11px")
+      .attr("fill", "#4a5a70")
+      .text("Artifact density (log scale)");
+
+    // Gradient bar
     for (let i = 0; i < steps; i++) {
       const t   = i / (steps - 1);
       const val = Math.exp(t * Math.log(Math.max(maxCount, 2)));
@@ -179,20 +195,28 @@
         .attr("x",      (i * legendW) / steps)
         .attr("y",      0)
         .attr("width",  legendW / steps + 0.5)
-        .attr("height", legendH)
+        .attr("height", barH)
         .attr("fill",   colorScale(Math.max(1, val)));
     }
 
-    lg.append("text").attr("x", 0).attr("y", legendH + 11)
-      .attr("font-size", "10px").attr("fill", "#7a8a9e").text("fewer");
+    // Numeric axis below the bar — matches the map legend style
+    const axisScale = d3.scaleLog()
+      .domain([1, Math.max(maxCount, 2)])
+      .range([0, legendW]);
 
-    lg.append("text").attr("x", legendW).attr("y", legendH + 11)
-      .attr("font-size", "10px").attr("fill", "#7a8a9e")
-      .attr("text-anchor", "end").text("more");
+    const legendAxis = d3.axisBottom(axisScale)
+      .ticks(4, ",")
+      .tickSize(3);
 
-    lg.append("text").attr("x", legendW / 2).attr("y", -3)
-      .attr("font-size", "10px").attr("fill", "#7a8a9e")
-      .attr("text-anchor", "middle").text("artifact density (log scale)");
+    const axG = lg.append("g")
+      .attr("transform", `translate(0, ${barH})`)
+      .call(legendAxis);
+
+    axG.select(".domain").attr("stroke", "#9aafc8");
+    axG.selectAll(".tick line").attr("stroke", "#9aafc8");
+    axG.selectAll(".tick text")
+      .attr("fill", "#4a5a70")
+      .attr("font-size", "10px");
   }
 
   // ── Tooltip ───────────────────────────────────────────────────────────────────
