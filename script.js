@@ -166,6 +166,10 @@ function updateMapWithFilters() {
       event.stopPropagation();
       selectedCountry = normalizeCountry(d.properties.name || "");
       renderArtifactPanels(selectedCountry, counts.get(selectedCountry) || 0);
+      // ── Update timeline to show only this country ──
+      if (window.Timeline) {
+        window.Timeline.update(currentFilteredRecords, selectedCountry);
+      }
     })
     .on("mouseleave", () => tooltip.style("display", "none"));
 
@@ -176,6 +180,11 @@ function updateMapWithFilters() {
     renderArtifactPanels(selectedCountry, counts.get(selectedCountry) || 0);
   } else {
     clearArtifactPanels();
+  }
+
+  // ── Update timeline whenever the period filter changes ──
+  if (window.Timeline) {
+    window.Timeline.update(currentFilteredRecords, selectedCountry);
   }
 }
 
@@ -237,7 +246,6 @@ async function renderArtifactPanels(countryName, count) {
   artifactPanelsSectionEl.hidden = false;
   artifactPanelsEl.innerHTML = "";
 
-  // Update the heading to show the selected country name
   const headingEl = document.getElementById("artifactPanelsHeading");
   if (headingEl) {
     if (countryName && count > 0) {

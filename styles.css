@@ -1,34 +1,28 @@
 * {
   box-sizing: border-box;
 }
-
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   color: #222;
   background: #f6f7fb;
 }
-
 .app {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.25rem;
 }
-
 .header h1 {
   margin: 0;
 }
-
 .header p {
   margin: 0.5rem 0 1rem;
 }
-
 .page-nav {
   margin: 0.4rem 0 0.7rem;
   display: flex;
   gap: 0.5rem;
 }
-
 .page-nav-link {
   text-decoration: none;
   border: 1px solid #c6ccda;
@@ -38,17 +32,14 @@ body {
   color: #24324d;
   background: #fff;
 }
-
 .page-nav-link.active {
   background: #24324d;
   color: #fff;
   border-color: #24324d;
 }
-
 .explain-text {
   max-width: 80ch;
 }
-
 .controls {
   display: flex;
   flex-wrap: wrap;
@@ -56,11 +47,9 @@ body {
   align-items: center;
   margin-bottom: 0.75rem;
 }
-
 label {
   font-weight: 600;
 }
-
 select,
 button {
   padding: 0.4rem 0.55rem;
@@ -68,12 +57,10 @@ button {
   border-radius: 6px;
   font-size: 0.95rem;
 }
-
 button {
   cursor: pointer;
   background: #fff;
 }
-
 .status-row {
   display: flex;
   justify-content: space-between;
@@ -82,17 +69,14 @@ button {
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
 }
-
 #stats {
   margin: 0;
   color: #444;
   font-weight: 600;
 }
-
 #status {
   margin: 0;
 }
-
 .chart-wrap {
   position: relative;
   border: 1px solid #e1e1e1;
@@ -100,28 +84,23 @@ button {
   background: white;
   overflow: hidden;
 }
-
 #map {
   width: 100%;
   height: 650px;
   display: block;
 }
-
 .country {
   stroke: #fff;
   stroke-width: 0.5px;
 }
-
 .country:hover {
   stroke: #111;
   stroke-width: 1px;
 }
-
 .legend text {
   font-size: 12px;
   fill: #333;
 }
-
 .tooltip {
   position: absolute;
   pointer-events: none;
@@ -135,28 +114,23 @@ button {
   display: none;
   z-index: 20;
 }
-
 .artifact-panels-section {
   margin-top: 1rem;
 }
-
 .artifact-panels-section h2 {
   margin: 0 0 0.5rem;
   font-size: 1.2rem;
 }
-
 .artifact-panels-empty {
   margin: 0.25rem 0 0;
   color: #4a4a4a;
 }
-
 .artifact-panels {
   margin-top: 0.75rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 0.75rem;
 }
-
 .artifact-card {
   background: #fff;
   border: 1px solid #e2e5ef;
@@ -164,7 +138,6 @@ button {
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
-
 .artifact-image-wrap {
   width: 100%;
   height: 180px;
@@ -172,7 +145,6 @@ button {
   position: relative;
   overflow: hidden;
 }
-
 .artifact-image-wrap img {
   width: 100%;
   height: 100%;
@@ -181,7 +153,6 @@ button {
   position: relative;
   z-index: 1;
 }
-
 .artifact-no-image {
   position: absolute;
   inset: 0;
@@ -193,43 +164,142 @@ button {
   font-size: 0.9rem;
   z-index: 0;
 }
-
 .artifact-content {
   padding: 0.65rem 0.75rem 0.8rem;
 }
-
 .artifact-title {
   margin: 0 0 0.4rem;
   font-size: 0.98rem;
   line-height: 1.3;
 }
-
 .artifact-meta {
   margin: 0.2rem 0;
   font-size: 0.88rem;
   color: #444;
 }
-
 .comparison-card {
   border: 1px solid #e1e1e1;
   border-radius: 10px;
   background: #fff;
   padding: 0.35rem;
 }
-
 #comparisonChart {
   width: 100%;
   height: 450px;
   display: block;
 }
-
 .compare-title {
   font-size: 14px;
   font-weight: 700;
   fill: #333;
 }
-
 .compare-value {
   font-size: 12px;
   fill: #2d2d2d;
+}
+
+/* ── Timeline section ──────────────────────────────────────────────────────── */
+.timeline-section {
+  margin-top: 1.25rem;
+  background: #fff;
+  border: 1px solid #e1e1e1;
+  border-radius: 10px;
+  padding: 0.9rem 1rem 0.5rem;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.timeline-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1a2236;
+}
+
+.timeline-reset-btn {
+  font-size: 0.82rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #c6ccda;
+  background: #f0f2f8;
+  color: #24324d;
+  cursor: pointer;
+  line-height: 1.4;
+}
+.timeline-reset-btn:hover {
+  background: #e2e6f0;
+}
+
+.timeline-sub {
+  margin: 0.2rem 0 0.6rem;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.timeline-wrap {
+  position: relative;
+  overflow-x: auto;
+}
+
+#timelineSvg {
+  display: block;
+  width: 100%;
+  min-height: 60px;
+  overflow: visible;
+}
+
+/* Hover highlight on timeline squares */
+.tl-sq:hover {
+  opacity: 0.75;
+  cursor: crosshair;
+}
+
+/* Timeline tooltip */
+.timeline-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(15, 15, 25, 0.92);
+  color: #f0f0f0;
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  max-width: 220px;
+  display: none;
+  z-index: 30;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.timeline-tooltip strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.85rem;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.tl-tt-row {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Axis styling overrides for timeline */
+.tl-axis .domain {
+  stroke: #ccc;
+}
+.tl-axis .tick line {
+  stroke: #ccc;
+}
+.tl-axis .tick text {
+  fill: #666;
+  font-size: 11px;
 }

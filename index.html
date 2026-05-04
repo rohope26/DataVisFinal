@@ -1,59 +1,69 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Met Museum Artifacts by Origin</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="app">
-      <header class="header">
-        <h1>Met Collection Origins</h1>
-        <nav class="page-nav" aria-label="Page navigation">
-          <a class="page-nav-link active" href="index.html">Map View</a>
-          <a class="page-nav-link" href="world-comparison.html">U.S. vs World</a>
-        </nav>
-        <p>
-          Choropleth map of artifact origins from
-          <a href="https://github.com/metmuseum/openaccess" target="_blank" rel="noreferrer">
-            The Metropolitan Museum of Art Open Access data
-          </a>
-        </p>
-      </header>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Met Museum Artifacts by Origin</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main class="app">
+<header class="header">
+  <h1>Met Collection Origins</h1>
+  <nav class="page-nav" aria-label="Page navigation">
+    <a class="page-nav-link active" href="index.html">Map View</a>
+    <a class="page-nav-link" href="world-comparison.html">U.S. vs World</a>
+  </nav>
+  <p>
+    Choropleth map of artifact origins from
+    <a href="https://github.com/metmuseum/openaccess" target="_blank" rel="noreferrer">
+      The Metropolitan Museum of Art Open Access data
+    </a>
+  </p>
+</header>
+<section class="controls">
+  <label for="periodFilter">Period</label>
+  <select id="periodFilter">
+    <option value="all">All periods</option>
+    <option value="ancient">Ancient (before 500 CE)</option>
+    <option value="medieval">Medieval (500–1499)</option>
+    <option value="earlyModern">Early Modern (1500–1799)</option>
+    <option value="modern">Modern (1800–1944)</option>
+    <option value="contemporary">Contemporary (1945+)</option>
+  </select>
+  <button id="reloadBtn" type="button">Reload Local Data</button>
+</section>
+<section class="status-row">
+  <p id="status">Loading local dataset...</p>
+  <p id="stats"></p>
+</section>
+<section class="chart-wrap">
+  <svg id="map" role="img" aria-label="World choropleth of artifact origins"></svg>
+  <div id="tooltip" class="tooltip" aria-hidden="true"></div>
+</section>
 
-      <section class="controls">
-        <label for="periodFilter">Period</label>
-        <select id="periodFilter">
-          <option value="all">All periods</option>
-          <option value="ancient">Ancient (before 500 CE)</option>
-          <option value="medieval">Medieval (500-1499)</option>
-          <option value="earlyModern">Early Modern (1500-1799)</option>
-          <option value="modern">Modern (1800-1944)</option>
-          <option value="contemporary">Contemporary (1945+)</option>
-        </select>
+<!-- ── TIMELINE ─────────────────────────────────────────────────── -->
+<section class="timeline-section" id="timelineSection">
+  <div class="timeline-header">
+    <h2 id="timelineHeading">All Artifacts — Timeline</h2>
+    <button class="timeline-reset-btn" id="timelineResetBtn" hidden>✕ Clear country filter</button>
+  </div>
+  <p class="timeline-sub" id="timelineSub">Each square represents one artifact. Click a country on the map to filter.</p>
+  <div class="timeline-wrap">
+    <svg id="timelineSvg" role="img" aria-label="Artifact timeline"></svg>
+    <div id="timelineTooltip" class="timeline-tooltip" aria-hidden="true"></div>
+  </div>
+</section>
+<!-- ──────────────────────────────────────────────────────────────── -->
 
-        <button id="reloadBtn" type="button">Reload Local Data</button>
-      </section>
-
-      <section class="status-row">
-        <p id="status">Loading local dataset...</p>
-        <p id="stats"></p>
-      </section>
-
-      <section class="chart-wrap">
-        <svg id="map" role="img" aria-label="World choropleth of artifact origins"></svg>
-        <div id="tooltip" class="tooltip" aria-hidden="true"></div>
-      </section>
-
-      <section id="artifactPanelsSection" class="artifact-panels-section">
-        <h2 id="artifactPanelsHeading">Selected Country Artifacts</h2>
-        <p id="artifactPanelsEmpty" class="artifact-panels-empty">Click a country on the map to view up to five artifacts.</p>
-        <div id="artifactPanels" class="artifact-panels" aria-live="polite"></div>
-      </section>
-    </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-    <script src="script.js?v=2"></script>
-  </body>
+<section id="artifactPanelsSection" class="artifact-panels-section">
+  <h2 id="artifactPanelsHeading">Selected Country Artifacts</h2>
+  <p id="artifactPanelsEmpty" class="artifact-panels-empty">Click a country on the map to view up to five artifacts.</p>
+  <div id="artifactPanels" class="artifact-panels" aria-live="polite"></div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="script.js?v=2"></script>
+<script src="timeline.js"></script>
+</body>
 </html>
