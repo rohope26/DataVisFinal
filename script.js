@@ -11,6 +11,11 @@ const statsEl = document.getElementById("stats");
 const artifactPanelsSectionEl = document.getElementById("artifactPanelsSection");
 const artifactPanelsEl = document.getElementById("artifactPanels");
 const artifactPanelsEmptyEl = document.getElementById("artifactPanelsEmpty");
+const countryExplorerToggleEl = document.getElementById("countryExplorerToggle");
+const countryExplorerEl = document.getElementById("countryExplorer");
+const mapSummaryEl = document.getElementById("mapSummary");
+const countryJumpSelectEl = document.getElementById("countryJumpSelect");
+const selectionAnnouncementEl = document.getElementById("selectionAnnouncement");
 
 let worldFeatures = [];
 let allRecords = [];
@@ -71,6 +76,12 @@ async function init() {
 function wireEvents() {
   reloadBtn.addEventListener("click", loadLocalData);
   periodFilterEl.addEventListener("change", updateMapWithFilters);
+  countryExplorerToggleEl.addEventListener("click", toggleCountryExplorer);
+  countryJumpSelectEl.addEventListener("change", () => {
+    if (countryJumpSelectEl.value) {
+      selectCountry(countryJumpSelectEl.value);
+    }
+  });
   window.addEventListener("resize", () => {
     resizeSvg();
     drawBaseMap();
@@ -78,6 +89,15 @@ function wireEvents() {
       updateMapWithFilters();
     }
   });
+}
+
+function toggleCountryExplorer() {
+  const shouldOpen = countryExplorerEl.hidden;
+  countryExplorerEl.hidden = !shouldOpen;
+  countryExplorerToggleEl.setAttribute("aria-expanded", String(shouldOpen));
+  countryExplorerToggleEl.textContent = shouldOpen
+    ? "Hide Keyboard Country Explorer"
+    : "Show Keyboard Country Explorer";
 }
 
 function resizeSvg() {
@@ -97,6 +117,12 @@ function drawBaseMap() {
   const height = svg.node().viewBox.baseVal.height;
 
   svg.selectAll("*").remove();
+  svg.append("title")
+    .attr("id", "mapTitle")
+    .text("World choropleth of artifact origins");
+  svg.append("desc")
+    .attr("id", "mapDescription")
+    .text("Countries are shaded by artifact count. Use the country explorer before the map for a keyboard and screen reader friendly list of represented countries.");
   const projection = d3.geoNaturalEarth1().fitSize([width, height - 30], { type: "FeatureCollection", features: worldFeatures });
   countryPath = d3.geoPath(projection);
 
@@ -108,6 +134,7 @@ function drawBaseMap() {
     .join("path")
     .attr("class", "country")
     .attr("d", countryPath)
+    .attr("focusable", false)
     .attr("fill", "#e0e0e0")
     .append("title")
     .text((d) => d.properties.name || "Unknown");
@@ -141,9 +168,14 @@ function updateMapWithFilters() {
   currentFilteredRecords = records;
 
   const counts = d3.rollup(records, (v) => v.length, (d) => normalizeCountry(d.country));
+  const sortedCounts = Array.from(counts, ([country, count]) => ({ country, count }))
+    .filter((d) => d.country)
+    .sort((a, b) => d3.descending(a.count, b.count) || d3.ascending(a.country, b.country));
   const maxCount = d3.max(Array.from(counts.values())) || 1;
   const colorMax = Math.max(maxCount, 2);
   const color = d3.scaleSequentialLog().domain([1, colorMax]).interpolator(d3.interpolateYlOrRd);
+
+  updateCountryExplorer(sortedCounts, records.length);
 
   svg
     .select(".countries")
@@ -156,20 +188,11 @@ function updateMapWithFilters() {
     .on("mousemove", (event, d) => {
       const countryName = normalizeCountry(d.properties.name || "");
       const value = counts.get(countryName) || 0;
-      tooltip
-        .style("display", "block")
-        .style("left", `${event.offsetX}px`)
-        .style("top", `${event.offsetY}px`)
-        .html(`<strong>${d.properties.name || "Unknown"}</strong><br/>Artifacts: ${value}`);
+      showMapTooltip(event.offsetX, event.offsetY, d.properties.name || "Unknown", value);
     })
     .on("click", (event, d) => {
       event.stopPropagation();
-      selectedCountry = normalizeCountry(d.properties.name || "");
-      renderArtifactPanels(selectedCountry, counts.get(selectedCountry) || 0);
-      // ── Update timeline to show only this country ──
-      if (window.Timeline) {
-        window.Timeline.update(currentFilteredRecords, selectedCountry);
-      }
+      selectCountry(normalizeCountry(d.properties.name || ""));
     })
     .on("mouseleave", () => tooltip.style("display", "none"));
 
@@ -177,7 +200,7 @@ function updateMapWithFilters() {
   statsEl.textContent = `Usable records: ${records.length} | Countries represented: ${counts.size}`;
 
   if (selectedCountry) {
-    renderArtifactPanels(selectedCountry, counts.get(selectedCountry) || 0);
+    renderArtifactPanels(selectedCountry, getCountryCount(selectedCountry));
   } else {
     clearArtifactPanels();
   }
@@ -186,6 +209,79 @@ function updateMapWithFilters() {
   if (window.Timeline) {
     window.Timeline.update(currentFilteredRecords, selectedCountry);
   }
+}
+
+function updateCountryExplorer(sortedCounts, totalCount) {
+  const topCountries = sortedCounts.slice(0, 8);
+  if (mapSummaryEl) {
+    const topText = topCountries
+      .map((d) => `${d.country} (${d.count.toLocaleString()})`)
+      .join(", ");
+    mapSummaryEl.textContent = topText
+      ? `The current period includes ${totalCount.toLocaleString()} usable records across ${sortedCounts.length.toLocaleString()} countries. The most represented countries are ${topText}.`
+      : "No countries are represented in the current period.";
+  }
+
+  if (!countryJumpSelectEl) return;
+  const previousValue = selectedCountry || countryJumpSelectEl.value;
+  countryJumpSelectEl.innerHTML = "";
+
+  const promptOption = document.createElement("option");
+  promptOption.value = "";
+  promptOption.textContent = "Choose a country";
+  countryJumpSelectEl.appendChild(promptOption);
+
+  sortedCounts.forEach(({ country, count }) => {
+    const option = document.createElement("option");
+    option.value = country;
+    option.textContent = `${country} (${count.toLocaleString()})`;
+    countryJumpSelectEl.appendChild(option);
+  });
+
+  countryJumpSelectEl.disabled = sortedCounts.length === 0;
+  if (previousValue && sortedCounts.some((d) => d.country === previousValue)) {
+    countryJumpSelectEl.value = previousValue;
+  }
+}
+
+function selectCountry(countryName) {
+  selectedCountry = countryName;
+  const count = getCountryCount(selectedCountry);
+
+  if (countryJumpSelectEl && countryJumpSelectEl.value !== selectedCountry) {
+    countryJumpSelectEl.value = selectedCountry;
+  }
+
+  renderArtifactPanels(selectedCountry, count);
+  if (window.Timeline) {
+    window.Timeline.update(currentFilteredRecords, selectedCountry);
+  }
+  if (selectionAnnouncementEl) {
+    selectionAnnouncementEl.textContent = `${selectedCountry} selected. ${count.toLocaleString()} artifact${count !== 1 ? "s" : ""} in the selected period. Timeline and artifact details updated below the map.`;
+  }
+}
+
+function clearSelectedCountry() {
+  selectedCountry = "";
+  if (countryJumpSelectEl) {
+    countryJumpSelectEl.value = "";
+  }
+  clearArtifactPanels();
+  if (selectionAnnouncementEl) {
+    selectionAnnouncementEl.textContent = "Country selection cleared.";
+  }
+}
+
+function getCountryCount(countryName) {
+  return currentFilteredRecords.filter((d) => normalizeCountry(d.country) === countryName).length;
+}
+
+function showMapTooltip(left, top, countryName, value) {
+  tooltip
+    .style("display", "block")
+    .style("left", `${left}px`)
+    .style("top", `${top}px`)
+    .html(`<strong>${countryName}</strong><br/>Artifacts: ${value}`);
 }
 
 function drawLegend(colorScale, maxCount) {
@@ -279,6 +375,7 @@ async function renderArtifactPanels(countryName, count) {
   artifacts.forEach((artifact) => {
     const card = document.createElement("article");
     card.className = "artifact-card";
+    card.tabIndex = 0;
 
     const imgWrap = document.createElement("div");
     imgWrap.className = "artifact-image-wrap";
@@ -306,11 +403,19 @@ async function renderArtifactPanels(countryName, count) {
     const artist = artifact.artistDisplayName || artifact.artist || "Unknown maker";
     const date = artifact.objectDate || artifact.objectBeginDate || "Date unknown";
     const medium = artifact.medium || artifact.classification || "Medium unknown";
+    const classification = artifact.classification || "Classification unknown";
+    const department = artifact.department || "Department unknown";
+    card.setAttribute(
+      "aria-label",
+      `${title}. Date: ${date}. Classification: ${classification}. Department: ${department}.`
+    );
     content.innerHTML = `
       <h3 class="artifact-title">${escapeHtml(title)}</h3>
       <p class="artifact-meta"><strong>Artist:</strong> ${escapeHtml(String(artist))}</p>
       <p class="artifact-meta"><strong>Date:</strong> ${escapeHtml(String(date))}</p>
       <p class="artifact-meta"><strong>Medium:</strong> ${escapeHtml(String(medium))}</p>
+      <p class="artifact-meta"><strong>Classification:</strong> ${escapeHtml(String(classification))}</p>
+      <p class="artifact-meta"><strong>Department:</strong> ${escapeHtml(String(department))}</p>
     `;
 
     card.appendChild(imgWrap);

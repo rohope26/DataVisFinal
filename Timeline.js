@@ -35,10 +35,10 @@
 
   // ── Reset button ─────────────────────────────────────────────────────────────
   resetBtn.addEventListener("click", () => {
-    window.selectedCountry = "";
+    if (typeof clearSelectedCountry === "function") clearSelectedCountry();
     sectionEl.hidden = true;
     if (typeof updateMapWithFilters === "function") updateMapWithFilters();
-    Timeline.update(window.currentFilteredRecords || [], "");
+    Timeline.update([], "");
   });
 
   // ── Public entry point ───────────────────────────────────────────────────────
@@ -129,6 +129,9 @@
 
       g.append("rect")
         .attr("class", "tl-cell")
+        .attr("role", count > 0 ? "img" : null)
+        .attr("tabindex", count > 0 ? 0 : null)
+        .attr("aria-label", count > 0 ? getCellLabel(binStart, count, binSize) : null)
         .attr("x",      i * cellW)
         .attr("y",      0)
         .attr("width",  Math.max(1, cellW - 1))
@@ -136,6 +139,8 @@
         .attr("fill",   fill)
         .attr("rx",     2)
         .on("mousemove",  (event) => onCellHover(event, binStart, count, binSize))
+        .on("focus", (event) => onCellFocus(event, binStart, count, binSize))
+        .on("blur", () => { ttEl.style.display = "none"; })
         .on("mouseleave", ()      => { ttEl.style.display = "none"; });
     });
 
@@ -221,6 +226,15 @@
 
   // ── Tooltip ───────────────────────────────────────────────────────────────────
   function onCellHover(event, binStart, count, binSize) {
+    showCellTooltip(event.clientX, event.clientY, binStart, count, binSize);
+  }
+
+  function onCellFocus(event, binStart, count, binSize) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    showCellTooltip(rect.left + rect.width / 2, rect.top, binStart, count, binSize);
+  }
+
+  function showCellTooltip(clientX, clientY, binStart, count, binSize) {
     const binEnd   = binStart + binSize - 1;
     const fmtYear  = y => y < 0 ? `${Math.abs(y)} BCE` : `${y} CE`;
 
@@ -231,14 +245,20 @@
 
     const wrap      = ttEl.parentElement;
     const wrapRect  = wrap.getBoundingClientRect();
-    const mx        = event.clientX - wrapRect.left;
-    const my        = event.clientY - wrapRect.top;
+    const mx        = clientX - wrapRect.left;
+    const my        = clientY - wrapRect.top;
     const ttW       = 180;
     const left      = mx + ttW + 10 > wrapRect.width ? mx - ttW - 6 : mx + 10;
 
     ttEl.style.display = "block";
     ttEl.style.left    = `${left}px`;
     ttEl.style.top     = `${my - 40}px`;
+  }
+
+  function getCellLabel(binStart, count, binSize) {
+    const binEnd = binStart + binSize - 1;
+    const fmtYear = y => y < 0 ? `${Math.abs(y)} BCE` : `${y} CE`;
+    return `${fmtYear(binStart)} to ${fmtYear(binEnd)}: ${count.toLocaleString()} artifact${count !== 1 ? "s" : ""}.`;
   }
 
   // ── Public API ────────────────────────────────────────────────────────────────
