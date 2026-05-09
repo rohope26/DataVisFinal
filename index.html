@@ -62,8 +62,28 @@
   <div id="artifactPanels" class="artifact-panels" aria-live="polite"></div>
 </section>
 </main>
+<button class="help-button" id="helpButton" type="button" aria-label="Open site help" aria-expanded="false" aria-controls="helpPanel">?</button>
+<aside class="help-panel" id="helpPanel" role="dialog" aria-modal="false" aria-labelledby="helpTitle" hidden>
+  <div class="help-panel-header">
+    <h2 id="helpTitle">How to Use This Site</h2>
+    <button class="help-close" id="helpCloseButton" type="button" aria-label="Close help">×</button>
+  </div>
+  <div class="help-panel-body">
+    <p>
+      This site explores where objects in The Met collection are recorded as coming from, using open access
+      collection data to make the museum's global reach easier to see.
+    </p>
+    <ul>
+      <li>Use the period dropdown to filter the map by time period.</li>
+      <li>Hover over a country to see its artifact count.</li>
+      <li>Click a country to view example artifacts and a timeline for that country.</li>
+      <li>Open the U.S. vs World page to compare United States objects with another selected country and the rest of the world.</li>
+    </ul>
+  </div>
+</aside>
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="script.js?v=2"></script>
-<script src="timeline.js"></script>
+<script src="Timeline.js"></script>
+<script src="help.js"></script>
 </body>
 </html>

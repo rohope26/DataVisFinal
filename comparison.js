@@ -8,6 +8,7 @@ const chartEl = d3.select("#comparisonChart");
 let allRecords = [];
 
 const COUNTRY_NORMALIZATION = {
+  america: "United States of America",
   usa: "United States of America",
   "united states": "United States of America",
   "u.s.a.": "United States of America",
@@ -21,9 +22,13 @@ const COUNTRY_NORMALIZATION = {
   czechia: "Czech Republic",
   "republic of korea": "South Korea",
   korea: "South Korea",
+  "democratic republic of congo": "Democratic Republic of the Congo",
   "democratic republic of the congo": "Democratic Republic of the Congo",
+  drc: "Democratic Republic of the Congo",
   "cote d'ivoire": "Ivory Coast",
   "côte d'ivoire": "Ivory Coast",
+  "republic of benin": "Benin",
+  "republic of cameroon": "Cameroon",
   iran: "Iran",
   vietnam: "Vietnam",
   syria: "Syria",
@@ -35,6 +40,25 @@ const COUNTRY_NORMALIZATION = {
   palestine: "Palestine",
   "north macedonia": "Macedonia"
 };
+
+const COUNTRY_QUALIFIER_PREFIXES = [
+  "probably",
+  "possibly",
+  "present-day"
+];
+
+const COUNTRY_REGION_PREFIXES = [
+  "central",
+  "eastern",
+  "northern",
+  "northeastern",
+  "northwestern",
+  "southern",
+  "southeastern",
+  "southwestern",
+  "western",
+  "byzantine"
+];
 
 init();
 
@@ -72,10 +96,14 @@ async function loadLocalData() {
 }
 
 function populateCountryOptions(records) {
-  const countryCounts = d3.rollup(records, (v) => v.length, (d) => normalizeCountry(d.country));
-  const countries = Array.from(countryCounts.keys())
-    .filter(Boolean)
-    .sort((a, b) => d3.ascending(a, b));
+  const countryCounts = new Map();
+  records.forEach((record) => {
+    getNormalizedCountries(record.country).forEach((country) => {
+      countryCounts.set(country, (countryCounts.get(country) || 0) + 1);
+    });
+  });
+
+  const countries = Array.from(countryCounts.keys()).sort((a, b) => d3.ascending(a, b));
 
   countryFilterEl.innerHTML = "";
   countries.forEach((country) => {
@@ -93,19 +121,22 @@ function populateCountryOptions(records) {
 }
 
 function renderChart(selectedCountry) {
-  const normalizedRecords = allRecords.map((d) => ({ ...d, normalizedCountry: normalizeCountry(d.country) }));
+  const normalizedRecords = allRecords.map((d) => ({ ...d, normalizedCountries: getNormalizedCountries(d.country) }));
   const totalCount = normalizedRecords.length;
-  const usCount = normalizedRecords.filter((d) => d.normalizedCountry === US_COUNTRY_NAME).length;
-  const selectedCount = normalizedRecords.filter((d) => d.normalizedCountry === selectedCountry).length;
+  const usCount = normalizedRecords.filter((d) => d.normalizedCountries.includes(US_COUNTRY_NAME)).length;
+  const selectedCount = normalizedRecords.filter((d) => d.normalizedCountries.includes(selectedCountry)).length;
 
   let bars = [];
   if (selectedCountry === US_COUNTRY_NAME) {
+    const restCount = normalizedRecords.filter((d) => !d.normalizedCountries.includes(US_COUNTRY_NAME)).length;
     bars = [
       { label: "United States", value: usCount, color: "#4472c4" },
-      { label: "Rest of World", value: totalCount - usCount, color: "#ed7d31" }
+      { label: "Rest of World", value: restCount, color: "#ed7d31" }
     ];
   } else {
-    const restCount = totalCount - usCount - selectedCount;
+    const restCount = normalizedRecords.filter((d) => {
+      return !d.normalizedCountries.includes(US_COUNTRY_NAME) && !d.normalizedCountries.includes(selectedCountry);
+    }).length;
     bars = [
       { label: "United States", value: usCount, color: "#4472c4" },
       { label: selectedCountry, value: selectedCount, color: "#70ad47" },
@@ -175,10 +206,76 @@ function resizeChart() {
 }
 
 function normalizeCountry(value) {
-  if (!value) return "";
-  const cleaned = String(value).trim();
+  const countries = getNormalizedCountries(value);
+  if (countries.length === 0) return "";
+  if (countries.length === 1) return countries[0];
+  return countries.join(" / ");
+}
+
+function getNormalizedCountries(value) {
+  if (!value) return [];
+
+  const normalizedParts = String(value)
+    .replace(/\s+/g, " ")
+    .replace(/\(\s*\?\s*\)/g, "")
+    .replace(/\?/g, "")
+    .split(/\s*\|\s*|\s*,?\s+or\s+|\s*,\s*(?=[^,]+(?:,\s*)?or\s+)/i)
+    .map(normalizeCountryPart)
+    .filter(Boolean);
+
+  return Array.from(new Set(normalizedParts)).sort((a, b) => d3.ascending(a, b));
+}
+
+function normalizeCountryPart(value) {
+  let cleaned = String(value)
+    .replace(/\s+/g, " ")
+    .replace(/\(\s*\?\s*\)/g, "")
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\?/g, "")
+    .trim();
+
+  cleaned = stripLeadingWords(cleaned, COUNTRY_QUALIFIER_PREFIXES);
+  cleaned = stripTrailingWords(cleaned, ["possibly"]);
+  cleaned = stripLeadingWords(cleaned, COUNTRY_REGION_PREFIXES);
+
   const lowered = cleaned.toLowerCase();
   return COUNTRY_NORMALIZATION[lowered] || cleaned;
+}
+
+function stripLeadingWords(value, words) {
+  let cleaned = value;
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+    for (const word of words) {
+      const prefix = `${word} `;
+      if (cleaned.toLowerCase().startsWith(prefix)) {
+        cleaned = cleaned.slice(prefix.length).trim();
+        changed = true;
+      }
+    }
+  }
+
+  return cleaned;
+}
+
+function stripTrailingWords(value, words) {
+  let cleaned = value;
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+    for (const word of words) {
+      const suffix = ` ${word}`;
+      if (cleaned.toLowerCase().endsWith(suffix)) {
+        cleaned = cleaned.slice(0, -suffix.length).trim();
+        changed = true;
+      }
+    }
+  }
+
+  return cleaned;
 }
 
 function setStatus(text) {
